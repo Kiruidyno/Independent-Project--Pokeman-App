@@ -1,45 +1,44 @@
-import React, { useState, useEffect } from "react";
-import Card from "./Card";
-import Pokeinfo from "./Pokeinfo";
+import React, { useState, useEffect } from 'react';
+import Card from './Card';
+import Pokeinfo from './Pokeinfo';
+import SearchBar from './SearchBar';
 
 const Main = () => {
   const [pokeData, setPokeData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [url, setUrl] = useState("https://pokeapi.co/api/v2/pokemon/");
+  const [url, setUrl] = useState('https://pokeapi.co/api/v2/pokemon/');
   const [nextUrl, setNextUrl] = useState();
   const [prevUrl, setPrevUrl] = useState();
   const [pokeDex, setPokeDex] = useState();
 
   const pokeFun = async () => {
     setLoading(true);
-    try {
-      const res = await fetch(url);
-      const data = await res.json();
-      setNextUrl(data.next);
-      setPrevUrl(data.previous);
-      getPokemon(data.results);
-    } catch (err) {
-      console.error(err);
-    }
+    const res = await fetch(url);
+    const data = await res.json();
+    setNextUrl(data.next);
+    setPrevUrl(data.previous);
+    getPokemon(data.results);
     setLoading(false);
   };
 
-  const getPokemon = async (results) => {
-    try {
-      const pokemonData = await Promise.all(
-        results.map(async (item) => {
-          const res = await fetch(item.url);
-          return await res.json();
-        })
-      );
+  const getPokemon = async (res) => {
+    res.map(async (item) => {
+      const result = await fetch(item.url);
+      const data = await result.json();
       setPokeData((state) => {
-        state = [...state, ...pokemonData];
+        state = [...state, data];
         state.sort((a, b) => (a.id > b.id ? 1 : -1));
         return state;
       });
-    } catch (err) {
-      console.error(err);
-    }
+    });
+  };
+
+  const handleSearch = async (query) => {
+    setLoading(true);
+    const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${query}`);
+    const data = await res.json();
+    setPokeData([data]);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -50,7 +49,12 @@ const Main = () => {
     <>
       <div className="container">
         <div className="left-content">
-          <Card pokemon={pokeData} loading={loading} infoPokemon={(poke) => setPokeDex(poke)} />
+          <SearchBar onSearch={handleSearch} />
+          <Card
+            pokemon={pokeData}
+            loading={loading}
+            infoPokemon={(poke) => setPokeDex(poke)}
+          />
 
           <div className="btn-group">
             {prevUrl && (
